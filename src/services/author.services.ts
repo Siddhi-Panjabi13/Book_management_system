@@ -1,6 +1,7 @@
 import { IAUTHOR, IBOOK } from "../interface/index";
 import { authorQueries, bookQueries } from "../queries/index";
 import { Author } from "../models/index";
+import { ErrorHandler } from "../errorsHandlers/error";
 const authorQueriesObject = new authorQueries();
 const bookQueriesObject = new bookQueries();
 export class authorService {
@@ -21,8 +22,8 @@ export class authorService {
     if (author) {
       return author;
     } else {
-      const message = { Message: "Author not found" };
-      return message;
+      const message =  "Author not found" ;
+      return new ErrorHandler(message,404);
     }
   }
   async createAuthor(body: IAUTHOR): Promise<IAUTHOR> {
@@ -39,8 +40,8 @@ export class authorService {
     const updatedAuthor: IAUTHOR | null =
       await authorQueriesObject.getAuthorQuery(id);
     if (!updatedAuthor) {
-      const message = { Message: "Author not found" };
-      return message;
+      const message =  "Author not found" ;
+      return (new ErrorHandler(message,404));
     }
     return updatedAuthor;
   }
@@ -55,8 +56,8 @@ export class authorService {
         id
       );
       if (!author) {
-        const message = { Message: "Author not found" };
-        return message;
+        const message =  "Author not found" 
+        return (new ErrorHandler(message,404));
       }
       await authorQueriesObject.deleteOneAuthor(id);
       await session.commitTransaction();

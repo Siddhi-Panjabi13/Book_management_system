@@ -1,5 +1,7 @@
 import { Request,Response,NextFunction } from "express";
 import { IUSER, Request1 } from "../interface/index";
+import { ErrorHandler } from "../errorsHandlers/error";
+import { responseError } from "../utils/responseError";
 const verifyAdmin = async (req:Request, res:Response, next:NextFunction) => {
     const user:IUSER|null = (req as Request1).user;
     
@@ -9,11 +11,17 @@ const verifyAdmin = async (req:Request, res:Response, next:NextFunction) => {
             next();
         }
         else {
-            res.json({ "message": "You donot have this right" })
+            const message= "You donot have this right"
+            const error=new ErrorHandler(message,401)
+            res.status(error.statusCode).json(responseError(message,error,false));
+            return
         }
     }
     else{
-        res.json({ "message": "User not found" })
+        const message="User not found"
+        const error=new ErrorHandler(message,401)
+            res.status(error.statusCode).json(responseError(message,error,false));
+            return
     }
    
 

@@ -1,6 +1,8 @@
 import { ICATEGORY, IBOOK } from "../interface/index";
 import { Category } from "../models";
 import { categoryQueries, bookQueries } from "../queries/index";
+import { ErrorHandler,customError } from "../errorsHandlers/error";
+import { responseError } from "../utils/responseError";
 const categoryQueriesObject = new categoryQueries();
 const bookQueriesObject = new bookQueries();
 export class categoryService {
@@ -18,8 +20,8 @@ export class categoryService {
     if (category) {
       return category;  
     } else {
-      const message = { Message: "Category not found" };
-      return message;
+      const message = "Category not found" ;
+      return (new ErrorHandler(message,404));
     }
   }
   async createCategory(body: ICATEGORY): Promise<ICATEGORY> {
@@ -36,8 +38,8 @@ export class categoryService {
     const updatedCategory: ICATEGORY | null =
       await categoryQueriesObject.getCategoryQuery(id);
     if (!updatedCategory) {
-      const message = { Message: "Category not found" };
-      return message;
+      const message =  "Category not found" ;
+      return (new ErrorHandler(message,404));
     }
     return updatedCategory;
   }
@@ -53,8 +55,8 @@ export class categoryService {
       const category: ICATEGORY | null =
         await categoryQueriesObject.getCategoryQuery(id);
       if (!category) {
-        const message = { Message: "Category not found" };
-        return message;
+        const message = "Category not found" ;
+        return new ErrorHandler(message,404);
       }
       await categoryQueriesObject.deleteOneCategory(id);
       await session.commitTransaction();

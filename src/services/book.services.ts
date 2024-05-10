@@ -1,6 +1,7 @@
 import { IBOOK } from "../interface/index";
 import { authorQueries, bookQueries, categoryQueries } from "../queries/index";
 import { Book } from "../models/index";
+import { ErrorHandler } from "../errorsHandlers/error";
 const bookQueriesObject = new bookQueries();
 const authorQueriesObject = new authorQueries();
 const categoryQueriesObject = new categoryQueries();
@@ -14,8 +15,8 @@ export class bookService {
     if (book) {
       return book;
     } else {
-      const message = { Message: "Book not found" };
-      return message;
+      const message = "Book not found" ;
+      return (new ErrorHandler(message,404));
     }
   }
   async createBook(body: IBOOK): Promise<IBOOK> {
@@ -29,8 +30,8 @@ export class bookService {
     );
     const updatedBook: IBOOK | null = await bookQueriesObject.getBookQuery(id);
     if (!updatedBook) {
-      const message = { Message: "Book not found" };
-      return message;
+      const message =  "Book not found" ;
+      return (new ErrorHandler(message,404));
     }
     return updatedBook;
   }
@@ -38,8 +39,8 @@ export class bookService {
     const book: IBOOK | null = await bookQueriesObject.deleteBookQuery(id);
 
     if (!book) {
-      const message = { Message: "Book not found" };
-      return message;
+      const message =  "Book not found" ;
+      return (new ErrorHandler(message,404));
     } else {
       const message = { Message: "Book deleted successfully" };
       return message;
@@ -91,6 +92,6 @@ export class bookService {
     const filteredResults = findQuery.filter((book) => {
       return book.authorId !== null && book.categoryId !== null;
     });
-    return findQuery;
+    return filteredResults;
   }
 }

@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { IUSER } from "../interface/index";
 import { userQueries } from "../queries/index";
 import dotenv from "dotenv";
+import { ErrorHandler } from "../errorsHandlers/error";
 dotenv.config();
 const secretKey = process.env.JWT_SECRET_KEY || "";
 const userQueriesObj: userQueries = new userQueries();
@@ -14,7 +15,7 @@ export class userService {
     if (role) {
       query.role = role;
     }
-    return await userQueriesObj.getUsersQuery(page, limit, length,query);
+    return await userQueriesObj.getUsersQuery(page, limit, length, query);
   }
   async createUser(userData: IUSER): Promise<IUSER> {
     const salt = 10;
@@ -30,14 +31,15 @@ export class userService {
   async loginUser(user_name: string, password: string): Promise<object> {
     const user: IUSER | null = await userQueriesObj.findOneUserQuery(user_name);
     if (!user) {
-      return { message: "User not found" };
+      const message = "User not found"
+      return (new ErrorHandler(message, 404));
     }
     const matchpassword: boolean = bcrypt.compareSync(password, user.password);
     if (!matchpassword) {
-      const message = { message: "No user has such password" };
-      return message;
+
+      const message = "No user has such password";
+      return (new ErrorHandler(message, 401));
     } else {
-      // Token on emailid
       const payload: object = { uname: user_name, uid: user._id };
       const token: string = jwt.sign(payload, secretKey, { expiresIn: 1200 });
       console.log(token, user);

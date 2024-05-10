@@ -1,45 +1,55 @@
 import { Request, Response, NextFunction } from "express";
 import { IBOOK } from "../interface/index";
 import { bookService } from "../services/index";
-import { Book, Author, Category } from "../models/index";
+// import { Book, Author, Category } from "../models/index";
+import { ErrorHandler } from "../errorsHandlers/error";
+import { responseError,server_Error } from "../utils/responseError";
 const bookServiceObject: bookService = new bookService();
 export class bookControllers {
   async getBooksController(req: Request, res: Response): Promise<void> {
     try {
       const page: number = Number(req.query.page) || 1;
       const limit: number = Number(req.query.limit) || 4;
-      const books: IBOOK[] = await bookServiceObject.getBooks(page,limit);
+      const books: IBOOK[] = await bookServiceObject.getBooks(page, limit);
       res.status(200).json(books);
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      const resp=server_Error(error);
+      res.status(500).json(resp);
+      return;
     }
   }
   async getBookController(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       if (!id) {
-        res.json({ Message: "Book-ID not found" });
+        const message = "Book-ID not found"
+        res.json(new ErrorHandler(message, 404));
         return;
       }
       const book: IBOOK | object = await bookServiceObject.getBook(id);
+      if (book instanceof ErrorHandler) {
+        res.status(book.statusCode).json(responseError(book.message, book, false));
+        return;
+      }
       res.json(book);
       return;
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      const resp=server_Error(error);
+      res.status(500).json(resp);
       return;
     }
   }
   async createBookController(req: Request, res: Response): Promise<void> {
     try {
-      if (!req.body) {
-        res.json({ Message: "Request body not found" });
-        return;
-      }
       const newBook: IBOOK = await bookServiceObject.createBook(req.body);
       res.status(200).json(newBook);
       return;
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      let resp=server_Error(error);
+      if(error.code==11000){
+        resp= 'Please be unique cause book already exist'
+     }
+      res.status(500).json(resp);
       return;
     }
   }
@@ -47,33 +57,48 @@ export class bookControllers {
     try {
       const { id } = req.params;
       if (!id) {
-        res.json({ Message: "Id not found" });
+        const message = "Id not found"
+        res.json(new ErrorHandler(message, 404));
         return;
       }
       const updatedBook: IBOOK | object = await bookServiceObject.updateBook(
         id,
         req.body
       );
+      if (updatedBook instanceof ErrorHandler) {
+        res.status(updatedBook.statusCode).json(responseError(updatedBook.message, updatedBook, false))
+        return
+      }
       res.json(updatedBook);
       return;
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      let resp=server_Error(error);
+      if(error.code==11000){
+        resp= 'Please be unique cause book already exist'
+     }
+      res.status(500).json(resp);
       return;
     }
   }
   async deleteBookController(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     if (!id) {
-      res.json({ Message: "Id not found" });
+      const message = "Id not found"
+      res.json(new ErrorHandler(message, 404));
       return;
     }
 
     try {
       const book: object = await bookServiceObject.deleteBook(id);
+      if (book instanceof ErrorHandler) {
+        res.status(book.statusCode).json(responseError(book.message, book, false))
+        return
+      }
       res.json(book);
       return;
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      const resp=server_Error(error);
+      res.status(500).json(resp);
       return;
     }
   }
@@ -90,7 +115,6 @@ export class bookControllers {
       const categoryName: any = query1.categoryName;
       const search: any = query1.search;
 
-      console.log("hi");
       const filteredResults =
         await bookServiceObject.getBooksSearchingFiltering(
           authorName,
@@ -99,11 +123,11 @@ export class bookControllers {
           page,
           limit
         );
-      console.log(filteredResults);
       res.json(filteredResults);
     } catch (error: any) {
-      console.error("Error:", error);
-      res.status(500).json({ error: "Internal Server Error" });
+      const resp=server_Error(error);
+      res.status(500).json(resp);
+      return;
     }
   }
 }
